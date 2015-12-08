@@ -30,7 +30,7 @@ stack_bottom:
 .global _start				# start function, bootloader jumps here
 .type _start, @function
 _start:
-	mov esp, stack_top
+	lea esp, [stack_bottom]
 	call kernel_main
 
 	cli
