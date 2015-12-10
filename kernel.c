@@ -1,8 +1,6 @@
 // Obviously copied from http://wiki.osdev.org/Bare_Bones
 
-#if !defined(__cplusplus)
-#include <stdbool.h> /* C doesn't have booleans by default. */
-#endif
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
  
@@ -16,86 +14,50 @@
 #error "This tutorial needs to be compiled with a ix86-elf compiler"
 #endif
 
-/* Hardware text mode color constants. */
-enum vga_color {
-	COLOR_BLACK = 0,
-	COLOR_BLUE = 1,
-	COLOR_GREEN = 2,
-	COLOR_CYAN = 3,
-	COLOR_RED = 4,
-	COLOR_MAGENTA = 5,
-	COLOR_BROWN = 6,
-	COLOR_LIGHT_GREY = 7,
-	COLOR_DARK_GREY = 8,
-	COLOR_LIGHT_BLUE = 9,
-	COLOR_LIGHT_GREEN = 10,
-	COLOR_LIGHT_CYAN = 11,
-	COLOR_LIGHT_RED = 12,
-	COLOR_LIGHT_MAGENTA = 13,
-	COLOR_LIGHT_BROWN = 14,
-	COLOR_WHITE = 15,
-};
+#include "lib.h"
+#include "vga_text.h"
 
-#define VGA_TEXT_BUFFER 0xB8000
-#define VGA_TEXT_SCREEN_WIDTH 80
-#define VGA_TEXT_SCREEN_HEIGHT 25
-
-size_t strlen (const char * str) {
-	int result = 0;
-	while (str[result]) {
-		result++;
-	}
-	return result;
+extern void setup_flat_gdt();
+extern void setup_interrupts();
+void init_stuff() {
+	setup_flat_gdt();
+	setup_interrupts();
 }
 
-struct vga_text_state {
-	size_t current_x;
-	size_t current_y;
-	uint8_t current_color;
-	uint16_t * buffer;
-} vga_text_state;
-
-#define VGA_TEXT_COLORHI ((uint16_t) vga_text_state.current_color << 8)
-#define VGA_TEXT_CURINDEX (vga_text_state.current_y * VGA_TEXT_SCREEN_WIDTH + vga_text_state.current_x)
-
-void vga_text_init() {
-	vga_text_state.current_x = 0;
-	vga_text_state.current_y = 0;
-	vga_text_state.current_color = (COLOR_BLACK << 4) | COLOR_WHITE;
-	vga_text_state.buffer = (uint16_t *) VGA_TEXT_BUFFER;
-
-	for (int i = 0; i < VGA_TEXT_SCREEN_WIDTH * VGA_TEXT_SCREEN_HEIGHT; i++) {
-		vga_text_state.buffer[i] = ' ' | VGA_TEXT_COLORHI;
-	}
-}
-
-void vga_text_putc(char c) {
-	vga_text_state.buffer[VGA_TEXT_CURINDEX] = c | VGA_TEXT_COLORHI;
-	vga_text_state.current_x++;
-	if (vga_text_state.current_x >= VGA_TEXT_SCREEN_WIDTH) {
-		vga_text_state.current_x = 0;
-		vga_text_state.current_y++;
-		if (vga_text_state.current_y >= VGA_TEXT_SCREEN_WIDTH) {
-			vga_text_state.current_y = 0;
-			// TODO: Scrolling
-		}
-	}
-}
-
-void vga_text_put(char *s, size_t len) {
-	for (size_t i = 0; i < len; i++) { 
-		vga_text_putc(s[i]);
-	}
-}
-
-void vga_text_print(char *s) {
-	vga_text_put(s, strlen(s));
-}
-
-#if defined(__cplusplus)
-extern "C"	// remind me why we need this
-#endif
 void kernel_main() {
+	init_stuff();
 	vga_text_init();
 	vga_text_print("Hello, world!\n");
+	kprintf("Lol, number %x\n:)\n", 0);
+	kprintf("Lol, number %x\n:)\n", 1);
+	kprintf("Lol, number %x\n:)\n", 2);
+	kprintf("Lol, number %x\n:)\n", 3);
+	kprintf("Lol, number %x\n:)\n", 4);
+	kprintf("Lol, number %x\n:)\n", 5);
+	kprintf("Lol, number %x\n:)\n", 6);
+	kprintf("Lol, number %x\n:)\n", 7);
+	kprintf("Lol, number %x\n:)\n", 8);
+	kprintf("Lol, number %x\n:)\n", 9);
+	kprintf("Lol, number %x\n:)\n", 10);
+	kprintf("Lol, number %x\n:)\n", 11);
+	kprintf("Lol, number %x\n:)\n", 12);
+	kprintf("Lol, number %x\n:)\n", 13);
+	kprintf("Lol, number %x\n:)\n", 14);
+	kprintf("Lol, number %x\n:)\n", 15);
+	kprintf("Lol, number %x\n:)\n", 16);
+	kprintf("Lol, number %x\n:)\n", 17);
+	kprintf("Lol, number %x\n:)\n", 18);
+	kprintf("Lol, number %x\n:)\n", 19);
+	kprintf("Lol, number %x\n:)\n", 20);
+	kprintf("Lol, number %x\n:)\n", 21);
+	kprintf("Lol, number %x\n:)\n", 22);
+	kprintf("Lol, number %x\n:)\n", 23);
+	kprintf("Lol, number %x\n:)\n", 24);
+	kprintf("Lol, number %x\n:)\n", 25);
+	kprintf("Lol, number %x\n:)\n", 26);
+	kprintf("Lol, number %x\n:)\n", 27);
+	kprintf("Lol, number %x\n:)\n", 28);
+	kprintf("Lol, number %x\n:)\n", 29);
+	kprintf("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA!!!\n", 0);
+
 }
