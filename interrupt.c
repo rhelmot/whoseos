@@ -2,30 +2,7 @@
 #include <stddef.h>
 
 #include "lib.h"
-
-static inline void outb(uint16_t port, uint8_t val)
-{
-    __asm__ volatile ( "outb %0, %1" : : "a"(val), "Nd"(port) );
-    /* TODO: Is it wrong to use 'N' for the port? It's not a 8-bit constant. */
-    /* TODO: Should %1 be %w1? */
-}
-
-static inline uint8_t inb(uint16_t port)
-{
-    uint8_t ret;
-    __asm__ volatile ( "inb %1, %0" : "=a"(ret) : "Nd"(port) );
-    /* TODO: Is it wrong to use 'N' for the port? It's not a 8-bit constant. */
-    /* TODO: Should %1 be %w1? */
-    return ret;
-}
-
-static inline void io_wait(void)
-{
-    /* TODO: This is probably fragile. */
-    __asm__ volatile ( "jmp 1f\n\t"
-                   "1:jmp 2f\n\t"
-                   "2:" );
-}
+#include "asm_help.h"
 
 typedef struct idt_entry {
    uint16_t offset_1; // offset bits 0..15
@@ -46,15 +23,25 @@ typedef struct pusha {
 	uint32_t eax;
 } pusha_t;
 
-uint8_t kernel_idt_descriptor[6];
 idt_entry_t kernel_idt[256];
 
 void (*interrupt_handlers[256])(pusha_t*);
+
+int irq_timer_counter = 0;
+void irq_timer_handler(pusha_t * regs) {
+	irq_timer_counter++;
+	*((char*)0xB80FE) = (irq_timer_counter % 10) + '0';
+	*((char*)0xB80FF) = 15;
+}
+
+extern void irq_keyboard_handler(pusha_t * regs);
 
 void setup_interrupts() {
 	for (int i = 0; i < 256; i++) {
 		interrupt_handlers[i] = NULL;
 	}
+	interrupt_handlers[0x20] = irq_timer_handler;
+	interrupt_handlers[0x21] = irq_keyboard_handler;
 
 #define MAKE_INTERRUPT_ENTRY(N)												\
 	extern void * interrupt_entry_##N;										\
@@ -99,27 +86,31 @@ void setup_interrupts() {
 	MAKE_INTERRUPT_ENTRY_MANY(E)
 	MAKE_INTERRUPT_ENTRY_MANY(F)
 
-	*((uint16_t*)&kernel_idt_descriptor[0]) = sizeof(kernel_idt) - 1;
-	*((void**)&kernel_idt_descriptor[2]) = kernel_idt;
+	lidt(kernel_idt, sizeof(kernel_idt));
 
-	__asm__( "lidt (%0)" : : "r" (&kernel_idt_descriptor) );
-    outb(0x20, 0x11);
-    outb(0xA0, 0x11);
-    outb(0x21, 0x20);
-    outb(0xA1, 0x28);
-    outb(0x21, 0x04);
-    outb(0xA1, 0x02);
-    outb(0x21, 0x01);
-    outb(0xA1, 0x01);
-    outb(0x21, 0x0);
-    outb(0xA1, 0x0);
-	__asm__(	"sti" : : );
+	outb(0x20, 0x11);
+	outb(0xA0, 0x11);
+	outb(0x21, 0x20);
+	outb(0xA1, 0x28);
+	outb(0x21, 4);
+	outb(0xA1, 2);
+	outb(0x21, 1);
+	outb(0xA1, 1);
+	outb(0x21, 0);
+	outb(0xA1, 0);
+	sti();
 }
 
-void interrupt_routine(int interrupt_num, pusha_t * regs) {
+void interrupt_routine(int interrupt_num, pusha_t * regs, int errcode) {
 	if (interrupt_handlers[interrupt_num]) {
 		interrupt_handlers[interrupt_num](regs);
 	} else {
 		kprintf("Ignoring interrupt %x\n", interrupt_num);
+	}
+	if (interrupt_num >= 0x20 && interrupt_num < 0x30) {
+		if (interrupt_num >= 0x28) {
+			outb(0xA0, 0x20);
+		}
+		outb(0x20, 0x20);
 	}
 }

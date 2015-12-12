@@ -33,7 +33,6 @@ _start:
 	lea esp, [stack_bottom]
 	call kernel_main
 
-	cli
 	hlt
 .end:
 	jmp .end

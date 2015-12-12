@@ -1,8 +1,9 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "asm_help.h"
+
 typedef uint8_t gdt_entry_t[8];
-typedef uint8_t gdt_descriptor_t[6];
 
 typedef struct __tss_struct {
     unsigned short   link;
@@ -45,7 +46,6 @@ typedef struct __tss_struct {
     unsigned short   iomap;
 } tss_struct;
 
-gdt_descriptor_t kernel_gdt_descriptor;
 gdt_entry_t kernel_gdt[4];
 tss_struct tss;
 
@@ -98,10 +98,7 @@ void setup_flat_gdt() {
 	encode_gdt_entry((uint8_t*) &kernel_gdt[2], &basic_gdt[2]);
 	encode_gdt_entry((uint8_t*) &kernel_gdt[3], &basic_gdt[3]);
 
-	*((uint16_t*)&kernel_gdt_descriptor[0]) = sizeof(kernel_gdt) - 1;
-	*((void**)&kernel_gdt_descriptor[2]) = kernel_gdt;
-
-	__asm__( "lgdt (%0)" : : "r" (&kernel_gdt_descriptor) );
+	lgdt(kernel_gdt, sizeof(kernel_gdt));
 	__asm__(	"ljmp $0x08, $complete_flush ;"
 
 				"complete_flush:"

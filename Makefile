@@ -8,8 +8,8 @@ all: kernel.bin bootable.iso
 clean:
 	rm *.o kernel.bin bootable.iso
 
-kernel.bin: kernel.o vga_text.o lib.o gdt.o boot.o interrupt.o interrupt_start.o linker.ld
-	$(CC) -T linker.ld -o kernel.bin -ffreestanding -O2 -nostdlib boot.o kernel.o vga_text.o lib.o gdt.o interrupt.o interrupt_start.o -lgcc
+kernel.bin: kernel.o vga_text.o lib.o gdt.o boot.o interrupt.o interrupt_start.o keyboard.o linker.ld
+	$(CC) -T linker.ld -o kernel.bin -ffreestanding -O2 -nostdlib boot.o kernel.o vga_text.o lib.o gdt.o interrupt.o interrupt_start.o keyboard.o -lgcc
 
 kernel.o: kernel.c
 	$(CC) $(CFLAGS) -c kernel.c -o kernel.o
@@ -21,6 +21,8 @@ gdt.o: gdt.c
 	$(CC) $(CFLAGS) -c gdt.c -o gdt.o
 interrupt.o: interrupt.c
 	$(CC) $(CFLAGS) -c interrupt.c -o interrupt.o
+keyboard.o: keyboard.c
+	$(CC) $(CFLAGS) -c keyboard.c -o keyboard.o
 
 interrupt_start.o: interrupt_start.s
 	cpp interrupt_start.s | $(AS) -o interrupt_start.o

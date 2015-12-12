@@ -74,6 +74,12 @@ void vga_text_put(const char *s, size_t len) {
 				vga_text_newline();
 				break;
 
+			case '\t':
+				do {
+					vga_text_putc(' ');
+				} while (vga_text_state.current_x % 8 != 0);
+				break;
+
 			default:
 				vga_text_putc(s[i]);
 				break;
